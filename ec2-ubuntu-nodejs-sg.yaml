@@ -1,0 +1,85 @@
+---
+Resources:
+  # NodeJS Ubuntu instance. 
+  UbuntuNodeInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: ap-south-1a
+      # AMI - Ubuntu Server 20.04 LTS (HVM), SSD Volume Type.
+      ImageId: ami-024c319d5d14b463e
+      InstanceType: t2.micro
+      KeyName: EC2KeyPair
+      SecurityGroups:
+        - !Ref SSHSecurityGroup
+        - !Ref WebSecurityGroup
+        - !Ref CustomSecurityGroup
+      Tags: 
+        - Key: "Environment"
+          Value: "Development"
+        - Key: "Name"
+          Value: "UbuntuNodeServer"
+      UserData:
+      # 1. Application update.
+      # 2. Install curl.
+      # 3. Download Node JS.
+      # 4. Install Node JS.
+      # 5. Install PM2.
+      # 6. Start-up the systemd service.
+      # 7. Install Ruby and download the CodeDeploy agent.
+      # 8. Install CodeDeploy agent.
+        Fn::Base64: 
+         !Sub |
+            #!/bin/bash
+            sudo apt update
+            sudo apt install curl -y
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash
+            sudo apt-get install nodejs
+            sudo npm install pm2@latest -g
+            pm2 startup system
+            sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2
+            startup systemd -u ubuntu --hp /home/ubuntu
+            pm2 save
+            sudo apt install ruby-full -y
+            sudo apt install wget
+            wget https://aws-codedeploy-ap-south-1.s3.ap-south-1.amazonaws.com/latest/install
+            chmod +x ./install
+            sudo ./install auto
+      
+
+  # SSH EC2 security group
+  SSHSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SSH Access for EC2 
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        CidrIp: 0.0.0.0/0
+        FromPort: 22
+        ToPort: 22
+
+  # HTTP/HTTPS EC2 security group
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTP/HTTPS Access for EC2
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        CidrIp: 0.0.0.0/0
+        FromPort: 80
+        ToPort: 80
+      - IpProtocol: tcp
+        CidrIp: 0.0.0.0/0
+        FromPort: 443
+        ToPort: 443
+
+  # Custom TCP post 3000 EC2 security group
+  CustomSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Custom TCP at port 3000 Access for EC2
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        CidrIp: 0.0.0.0/0
+        FromPort: 3000
+        ToPort: 3000
+
