@@ -15,7 +15,7 @@ Resources:
         - !Ref CustomSecurityGroup
       Tags: 
         - Key: "Environment"
-          Value: "Development"
+          Value: "NodeDevelopment"
         - Key: "Name"
           Value: "UbuntuNodeServer"
       UserData:
@@ -36,8 +36,7 @@ Resources:
             sudo apt-get install nodejs
             sudo npm install pm2@latest -g
             pm2 startup system
-            sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2
-            startup systemd -u ubuntu --hp /home/ubuntu
+            sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
             pm2 save
             sudo apt install ruby-full -y
             sudo apt install wget
