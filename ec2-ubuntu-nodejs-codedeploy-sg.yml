@@ -1,11 +1,5 @@
 ---
 Parameters:
-  InstanceName:
-    Description: Instance Name
-    Type: String
-  AvailabilityZoneName:
-    Description: Type the Availability Zone
-    Type: String
   KeyPair:
     Description: EC2 Key Pair
     Type: String
@@ -15,7 +9,7 @@ Resources:
   UbuntuNodeInstance:
     Type: AWS::EC2::Instance
     Properties:
-      AvailabilityZone: !Ref AvailabilityZoneName
+      AvailabilityZone: ap-south-1a
       # AMI - Ubuntu Server 20.04 LTS (HVM), SSD Volume Type.
       ImageId: ami-024c319d5d14b463e
       InstanceType: t2.micro
@@ -28,7 +22,7 @@ Resources:
         - Key: "Environment"
           Value: "NodeDevelopment"
         - Key: "Name"
-          Value: !Ref InstanceName
+          Value: "UbuntuNodeServer"
       UserData:
       # 1. Application update.
       # 2. Install curl.
@@ -36,7 +30,8 @@ Resources:
       # 4. Install Node JS.
       # 5. Install PM2.
       # 6. Start-up the systemd service.
-      # 7. Install Git.
+      # 7. Install Ruby and download the CodeDeploy agent.
+      # 8. Install CodeDeploy agent.
         Fn::Base64: 
          !Sub |
             #!/bin/bash
@@ -48,8 +43,12 @@ Resources:
             pm2 startup system
             sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
             pm2 save
-            sudo apt-get install git -y
-
+            sudo apt install ruby-full -y
+            sudo apt install wget
+            wget https://aws-codedeploy-ap-south-1.s3.ap-south-1.amazonaws.com/latest/install
+            chmod +x ./install
+            sudo ./install auto
+      
 
   # SSH EC2 security group
   SSHSecurityGroup:
